@@ -33,6 +33,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     /*-------------------------------------------------*/
     private List<String > listProviders;
     private LocationManager locationManager;
+    boolean flag=false;
 
 
     @Override
@@ -70,49 +80,118 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         transaction.replace(R.id.fragment_container, mapFragment);
         transaction.commit();
 
-        Button bt_line = findViewById(R.id.bt_line);
+        Button bt_regist = findViewById(R.id.bt_regist);
         //Button bt_regist = findViewById(R.id.bt_regist);
+        Button bt_stop=findViewById(R.id.bt_stop);
         Button bt_start=findViewById(R.id.bt_start);
-        bt_line.setOnClickListener((v) -> {
+
+
+
+        bt_start.setOnClickListener((v) -> {
+            flag=!flag;
+        });
+        bt_stop.setOnClickListener((v) -> {
+            flag=!flag;
             createArray();
         });
-
-        bt_start.setOnClickListener((v)->{
-
+        bt_regist.setOnClickListener((v) ->{
+            Thread thread=new Thread(){
+                @Override
+                public void run() {
+                    regist();
+                }
+            };
+            thread.start();
         });
-
         /*-------------------------------------------------*/
 
+        // 권한 허용
         checkGrant();
-
     }
+    public void regist(){
+        Log.d(TAG, "등록버튼");
+        // 서버에서 요청 받을 준비
+        BufferedWriter buffw=null;
+        BufferedReader buffr=null;
+        OutputStreamWriter os=null;
+        InputStreamReader is=null;
 
-    // 사용자에게 권한을 부여하는 함수
-    public void checkGrant(){
-        if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)!=PackageManager.PERMISSION_GRANTED){
-            //권한이 없을 경우 최초 권한 요청 또는 사용자에 의한 재요청 확인
-            if(ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.ACCESS_FINE_LOCATION) && ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)){
-                //권한 재요청
-                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 100);
-                return;
-            }else{
-                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 100);
-                return;
+        try {
+            URL url=new URL("http://172.30.1.60:7777/rest/myrecord/gps");
+            URLConnection urlConnection =url.openConnection();
+            HttpURLConnection httpCon=(HttpURLConnection)urlConnection;
+
+
+            // 세팅
+            httpCon.setRequestMethod("POST");
+            httpCon.setDoOutput(true);
+            httpCon.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+
+            // 5-3) 파라미터 보낼 폼 데이터 만들기   -- 쿼리스트링화!
+
+            //Log.d(TAG, "보낼 데이터 모습"+postData);
+
+
+            // 보낼 객체 준비하고 -- 쓰기 write() 하면 끝!
+            os=new OutputStreamWriter(httpCon.getOutputStream());
+            buffw=new BufferedWriter(os);
+
+            //buffw.write(postData+"/n");
+            buffw.flush();
+
+
+            //데이터 요청 이후에 입력스트림 만들어야 한다..
+            is = new InputStreamReader(httpCon.getInputStream(), "UTF-8");
+            buffr = new BufferedReader(is);
+
+            StringBuilder sb=new StringBuilder();
+            while(true){
+                String result=buffr.readLine();
+                sb.append(result);
+                if(result==null){
+                    break;
+                }
+            }
+            Log.d(TAG, sb.toString());
+
+
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }finally {
+            if(buffw !=null){
+                try {
+                    buffw.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            if(os !=null){
+                try {
+                    os.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            if(is !=null){
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            if(buffr !=null){
+                try {
+                    buffr.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
-
-        //1. 위치관리자 객체 생성
-        locationManager=(LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        //여기를 NETWORK_PROVIDER로 잡는게 더 정확할 듯 싶다.
-        Location lastKnownLocation=locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        if(lastKnownLocation !=null){
-            double lat = lastKnownLocation.getLatitude();
-            double lng = lastKnownLocation.getLongitude();
-            Log.d(TAG, "받아온 경도 값은 : "+lng+",,,받아온 위도값은 : "+lat);
-
-        }
     }
+
 
 
     // 구글맵에 대한 초기 설정 함수
@@ -126,7 +205,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.d(TAG, "넘어온 맵 객체 "+map);
 
 
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(sinchon, 13));
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(sinchon, 16));
       /*  map.animateCamera(CameraUpdateFactory.zoomIn());
 
         map.moveCamera(CameraUpdateFactory.newLatLng(sinchon));*/
@@ -155,7 +234,24 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
 
-    // 리스트를 받아서 라인을 그려주는 함수
+    // 저장하기 누르면 클릭된 위도, 경도를 담은 리스트를 그리기 함수로 넘김
+    public void createArray(){
+        Log.d(TAG, "클릭 감지");
+
+        Log.d(TAG, "리스트가 쌓일까? "+latlngList);
+
+        JSONArray jsonArray=new JSONArray();
+
+        for(int i=0; i<latlngList.size(); i++){
+            LatLng latLng=latlngList.get(i);
+            jsonArray.put(latLng);
+        }
+
+        createPolyLine(jsonArray);
+
+    }
+
+    // 제이슨배열을 받아서 라인을 그려주는 함수
     public void createPolyLine(JSONArray jsonArray){
 
         // 폴리라인 객체
@@ -174,6 +270,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // 이제 해야할 일 : 제이슨 리스트로 담아서 보내기
         // 보내거나 db에 저장하거나... 디비작업은?
+        Log.d(TAG,"그림 그려지는 마커 리스트 "+latlngList);
 
 
         option.color(Color.RED);
@@ -185,31 +282,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Polyline polyline = map.addPolyline(option);
         Log.d(TAG, "넘어온 라인 객체 "+polyline);
 
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(sinchon, 13));
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(sinchon, 18));
 
     }
 
 
-
-    // 저장하기 누르면 클릭된 위도, 경도를 담은 리스트를 그리기 함수로 넘김
-    public void createArray(){
-        Log.d(TAG, "클릭 감지");
-
-        Log.d(TAG, "리스트가 쌓일까? "+latlngList);
-
-        JSONArray jsonArray=new JSONArray();
-
-        for(int i=0; i<latlngList.size(); i++){
-            LatLng latLng=latlngList.get(i);
-            jsonArray.put(latLng);
-        }
-
-        createPolyLine(jsonArray);
-
-    }
-
-    /*-----------------------------------------------------------------------------------------------------*/
-
+    /*----------------------------------------------
+        여기서부터는 GPS 관련 코드
+        --------------------------------------------*/
     @Override
     public void onLocationChanged(@NonNull Location location) {
         double latitude = 0.0;
@@ -229,12 +309,58 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Log.d(TAG, "한뭉터기");
 
             LatLng latLng=null;
-            /*================================================*/
 
-            // 실시간으로 들어오는 위도 경도를 한 객체로 받는다.
             latLng=new LatLng(latitude, longitude);
 
+
+
+            // 로케이션에 추가는 계속 하지만, 버튼을 눌렀을 때만 마커를 생성한다
+            if(flag){
+                latlngList.add(latLng); // 리스트 저장
+
+
+                Log.d(TAG, "이 객체는 뭘까"+latLng);
+                Log.d(TAG, "확인중"+latLng);
+                MarkerOptions options=new MarkerOptions();
+                options.position(latLng);
+                options.title("출발");
+                options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+                // 정의한 마커 추가
+                map.addMarker(options).showInfoWindow();
+                // 실시간으로 마커 찍어보기!!
+
+
+                // 다시시도!
+
+
+            }
+
+            GPSData gpsData=new GPSData();  // 리스트 저장하기
+            gpsData.setDataList(latlngList);
+
+            Log.d(TAG,"넘길 GPS 리스트는~? "+gpsData.getDataList());
+
+            /*================================================*/
+
+        }
+        //얘는 좌표값을 구하는 것이 아닌 다른 어플리케이션이나 서비스가 좌표값을 구하면 단순히 그 값을 받아 오기만 하는
+        //전달자 역할 이라는데.. 어디에 쓰이는 건지 모르겠다.
+        if(location.getProvider().equals(LocationManager.PASSIVE_PROVIDER)) {
+            latitude = location.getLatitude();
+            longitude = location.getLongitude();
+            Log.d(TAG + " PASSIVE : ", Double.toString(latitude )+ '/' + Double.toString(longitude));
+        }
+    }
+
+    public void getLocation(LatLng latLng){
+/*        // 클릭시 바뀜
+        flag=!flag;
+
+        // 참일 때만 리스트에 보관하고
+        if(flag){
+
             latlngList.add(latLng); // 리스트 저장
+            // 실시간으로 들어오는 위도 경도를 한 객체로 받는다.
 
             Log.d(TAG, "이 객체는 뭘까"+latLng);
             Log.d(TAG, "확인중"+latLng);
@@ -246,19 +372,35 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             map.addMarker(options).showInfoWindow();
             // 실시간으로 마커 찍어보기!!
 
-/*            MarkerOptions options=new MarkerOptions();
-            options.position(new LatLng(latitude, longitude));
-            map.addMarker(options);*/
+        }*/
+
+    }
 
 
-
+    // 사용자에게 권한을 부여하는 함수
+    public void checkGrant(){
+        if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)!=PackageManager.PERMISSION_GRANTED){
+            //권한이 없을 경우 최초 권한 요청 또는 사용자에 의한 재요청 확인
+            if(ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.ACCESS_FINE_LOCATION) && ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)){
+                //권한 재요청
+                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 100);
+                return;
+            }else{
+                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 100);
+                return;
+            }
         }
-        //얘는 좌표값을 구하는 것이 아닌 다른 어플리케이션이나 서비스가 좌표값을 구하면 단순히 그 값을 받아 오기만 하는
-        //전달자 역할 이라는데.. 어디에 쓰이는 건지 모르겠다.
-        if(location.getProvider().equals(LocationManager.PASSIVE_PROVIDER)) {
-            latitude = location.getLatitude();
-            longitude = location.getLongitude();
-            Log.d(TAG + " PASSIVE : ", Double.toString(latitude )+ '/' + Double.toString(longitude));
+
+        //1. 위치관리자 객체 생성
+        locationManager=(LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        //여기를 NETWORK_PROVIDER로 잡는게 더 정확할 듯 싶다.
+        Location lastKnownLocation=locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        if(lastKnownLocation !=null){
+            double lat = lastKnownLocation.getLatitude();
+            double lng = lastKnownLocation.getLongitude();
+            Log.d(TAG, "받아온 경도 값은 : "+lng+",,,받아온 위도값은 : "+lat);
+
         }
     }
 

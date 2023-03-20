@@ -14,31 +14,25 @@
 
 
         <!--구글맵이 얹혀질 공간-->
-        <Button
-            android:layout_gravity="center_horizontal"
-            android:text="라인그리기"
-            android:id="@+id/bt_line"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-        <Button
-            android:layout_gravity="center_horizontal"
-            android:text="저장하기"
-            android:id="@+id/bt_regist"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+
         <Button
             android:id="@+id/bt_start"
             android:layout_gravity="center_horizontal"
-            android:text="기록시작"
+            android:text="시작"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
         <Button
             android:layout_gravity="center_horizontal"
-            android:text="기록중지"
+            android:text="중지"
             android:id="@+id/bt_stop"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
-
+        <Button
+            android:layout_gravity="center_horizontal"
+            android:text="저장"
+            android:id="@+id/bt_regist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
     </LinearLayout>
 
