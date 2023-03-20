@@ -27,14 +27,21 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
         <Button
+            android:id="@+id/bt_start"
             android:layout_gravity="center_horizontal"
-            android:text="위치"
-            android:id="@+id/bt_gps"
+            android:text="기록시작"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <Button
+            android:layout_gravity="center_horizontal"
+            android:text="기록중지"
+            android:id="@+id/bt_stop"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
 
     </LinearLayout>
+
     <FrameLayout
 
         android:id="@+id/fragment_container"
@@ -42,7 +49,6 @@
         android:layout_height="match_parent">
 
     </FrameLayout>
-
 
 
 </LinearLayout>

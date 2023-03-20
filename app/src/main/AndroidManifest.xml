@@ -3,10 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- 위도 경도 가져오기 위한 Permission 추가 -->
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!--정확한 위치를 제공하는 권한-->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-
-    <!-- 서버에 보내기 위한 인터넷 접근 허용 -->
+    <!--모호한 위치를 제공하는 권한(EX: 날씨 정보같이 정확한 좌표가 필요없는 경우에 사용)-->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -19,10 +19,14 @@
         android:theme="@style/Theme.GoogleMapApp2"
         tools:targetApi="31">
         <activity
+            android:name=".GPSManager"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -30,7 +34,6 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyANZ4_fRRdXyjcJE98Cjo1tMGf4tdzjY7A" />
-
     </application>
 
 </manifest>
