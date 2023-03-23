@@ -7,7 +7,7 @@ import lombok.Data;
 // gps 데이터를 받을 객체
 @Data
 public class GPSData {
-	
-	private List dataList;
 
+	private double lati;
+	private double longi;
 }
