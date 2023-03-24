@@ -59,7 +59,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     LatLng sinchon=new LatLng(37.56288275392123, 126.94683778297095);
 
     /*-------------------------------------------------*/
-    private List<String > listProviders;
     private LocationManager locationManager;
     boolean flag=false;
 
@@ -97,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // 중지
         bt_stop.setOnClickListener((v) -> {
             Log.d(TAG,"중지 버튼 누름");
-            flag=!flag;
+            //flag=!flag;
 
             try {
                 createArray();
@@ -140,7 +139,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.d(TAG,"보낼 데이터 가공 전의 모습 : "+toJsonList);
 
        try {
-        URL url=new URL("http://172.30.1.60:7777/rest/exr/today/gps");
+        URL url=new URL("http://172.30.1.60:7777/rest/myrecord/today/gps");
         URLConnection urlConnection =url.openConnection();
         HttpURLConnection httpCon=(HttpURLConnection)urlConnection;
 
@@ -276,20 +275,31 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         //createPolyLine();
 
 
+        // 클릭하면 마커 추가하기
         map.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(@NonNull LatLng latLng) {
                 // 실시간으로 테스트중!
-/*                latlngList.add(latLng);
+               //latlngList.add(latLng);
 
-                Log.d(TAG, "이 객체는 뭘까"+latLng);
-                Log.d(TAG, "확인중"+latLng);
+                GPSData gpsData=new GPSData();
+
+                gpsData.setLati(latLng.latitude);
+                gpsData.setLongi(latLng.longitude);
+
+                latlngList.add(gpsData); // 리스트 저장
+
+                Log.d(TAG,"넘길 GPS 리스트는~? "+latlngList);
+
+
                 MarkerOptions options=new MarkerOptions();
                 options.position(latLng);
                 options.title("출발");
                 options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
                 // 정의한 마커 추가
-                map.addMarker(options).showInfoWindow();*/
+                if(options.isVisible()){
+                    map.addMarker(options).showInfoWindow();
+                }
 
             }
         });
@@ -347,7 +357,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // 가장 처음의 값으로 줌 focus 하기
         GPSData gpsData=latlngList.get(0);
         LatLng position=new LatLng(gpsData.getLati(), gpsData.getLongi());
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 18)); // 현재 위치로 바꿀 예정
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 17)); // 현재 위치로 바꿀 예정
 
     }
 
