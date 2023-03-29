@@ -2,16 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- 위도 경도 가져오기 위한 Permission 추가 -->
-    <!--정확한 위치를 제공하는 권한-->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <!--모호한 위치를 제공하는 권한(EX: 날씨 정보같이 정확한 좌표가 필요없는 경우에 사용)-->
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- 위도 경도 가져오기 위한 Permission 추가 -->
+    <!-- 정확한 위치를 제공하는 권한 -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- 모호한 위치를 제공하는 권한(EX: 날씨 정보같이 정확한 좌표가 필요없는 경우에 사용) -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- 외부 저장소 접근하기 -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
-        android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -19,20 +17,24 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.GoogleMapApp2"
+        android:usesCleartextTraffic="true"
+
         tools:targetApi="31">
         <activity
             android:name=".MainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ExrTodayActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
-
         </activity>
-
-
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"

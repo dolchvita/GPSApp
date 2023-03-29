@@ -8,6 +8,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -61,8 +62,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     /*-------------------------------------------------*/
     private LocationManager locationManager;
     boolean flag=false;
-
     JSONArray toJsonList;   // 서버로 보낼 데이터 제이슨화하여 담아놓은 것
+
+    DailyWalk dailyWalk=new DailyWalk();
+
+    // 로그인시 부여받은 idx대입하기
+    int member_idx=((LoginActivity) LoginActivity.context_login).member_idx;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,7 +90,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Button bt_regist = findViewById(R.id.bt_regist);
         Button bt_stop=findViewById(R.id.bt_stop);
         Button bt_start=findViewById(R.id.bt_start);
-
+        Button bt_regist2=findViewById(R.id.bt_regist2);
 
         // 시작
         bt_start.setOnClickListener((v) -> {
@@ -105,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        // 저장
+        // 저장  - 위도 경도 보내기
         bt_regist.setOnClickListener((v) ->{
             Thread thread=new Thread(){
                 @Override
@@ -120,15 +125,41 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             };
             thread.start();
         });
-        /*-------------------------------------------------*/
+
+
+        // 저장2  - 거리 보내기
+        bt_regist2.setOnClickListener((v) ->{
+            Thread thread=new Thread(){
+                @Override
+                public void run() {
+                    try {
+                        Log.d(TAG,"저장 버튼 누름");
+                        regist2();
+                    } catch (JSONException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            };
+            thread.start();
+        });
+
 
         // 권한 허용
         checkGrant();
+        /*-------------------------------------------------*/
+
+    }
+
+    // 계산된 거리값 저장
+    public void regist2() throws JSONException {
+
+
     }
 
 
 
 
+    // 위도 경도 저장하는 메서드
     public void regist() throws JSONException {
         Log.d(TAG, "등록버튼");
         // 서버에서 요청 받을 준비
@@ -151,39 +182,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
             // 5-3) 파라미터 보낼 폼 데이터 만들기   -- 쿼리스트링화!
-
-       // 1-4)
-       // 보낼 데이터 가공!
-/*       List<JSONObject> list=new ArrayList<JSONObject>();
-        for(int i=0; i<toJsonList.length(); i++){
-            Object json=toJsonList.get(i);
-            Log.d(TAG,"스트링화한 제이슨의 모습은? :"+json.toString());
-
-            // 각각의 오브젝트를 꺼내서 담기!
-            list.add((JSONObject) json);
-        }
-           Log.d(TAG,"최종적으로 보낼 리스트의 모습!! :"+list);*/
-
-           // String postData=JSON.toS
-            //Log.d(TAG, "보낼 데이터 모습"+postData);
-
-
-/*           Gson gson=new Gson();
-           String jsonString=gson.toJson(toJsonList);
-           Log.d(TAG,"변환된 제이슨!! : "+jsonString);*/
-
-/*
-           Wrapper[] wrapper=null;
-        //   wrapper=
-           for(int i=0; i<toJsonList.length(); i++){
-               Object json=toJsonList.get(i);
-               Log.d(TAG,"스트링화한 제이슨의 모습은? :"+json.toString());
-
-               wrapper=gson.fromJson(String.valueOf(toJsonList), Wrapper[].class);
-               // 각각의 오브젝트를 꺼내서 담기!
-               list.add((JSONObject) json);
-           }*/
-
 
            Log.d(TAG,"변환된 제이슨!! : "+toJsonList);
 
@@ -283,21 +281,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                //latlngList.add(latLng);
 
                 GPSData gpsData=new GPSData();
-
+                gpsData.setMember_idx(member_idx);
                 gpsData.setLati(latLng.latitude);
                 gpsData.setLongi(latLng.longitude);
 
                 latlngList.add(gpsData); // 리스트 저장
-
                 Log.d(TAG,"넘길 GPS 리스트는~? "+latlngList);
-
 
                 MarkerOptions options=new MarkerOptions();
                 options.position(latLng);
                 options.title("출발");
                 options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
                 // 정의한 마커 추가
-                if(options.isVisible()){
+                if(!options.isVisible()){
                     map.addMarker(options).showInfoWindow();
                 }
 
@@ -310,23 +306,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // 저장하기 누르면 클릭된 위도, 경도를 담은 리스트를 그리기 함수로 넘김
     public void createArray() throws JSONException {
         Log.d(TAG, "클릭 감지");
+        Log.d(TAG, "리스트가 쌓일까? " + latlngList);
 
-        Log.d(TAG, "리스트가 쌓일까? "+latlngList);
+        toJsonList = new JSONArray();
 
-        toJsonList=new JSONArray();
-
-        for(int i=0; i<latlngList.size(); i++){
-            GPSData gpsData=latlngList.get(i);
-            JSONObject json=new JSONObject();
+        GPSData gpsData = null;
+        for (int i = 0; i < latlngList.size(); i++) {
+            gpsData = latlngList.get(i);
+            JSONObject json = new JSONObject();
 
             json.put("lati", gpsData.getLati());
             json.put("longi", gpsData.getLongi());
+            json.put("member_idx", gpsData.getMember_idx());
 
             toJsonList.put(json);
         }
-        Log.d(TAG,"보낼 리스트의 최종 모습 : "+toJsonList);
-        
+
+        Log.d(TAG, "보낼 리스트의 최종 모습 : " + toJsonList);
         createPolyLine();
+
+
     }
 
 
@@ -347,7 +346,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         option.color(Color.RED);
-        option.width(12);
+        option.width(16);
         option.geodesic(true);
 
         Polyline polyline = map.addPolyline(option);
@@ -358,6 +357,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         GPSData gpsData=latlngList.get(0);
         LatLng position=new LatLng(gpsData.getLati(), gpsData.getLongi());
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 17)); // 현재 위치로 바꿀 예정
+
+        int meters = DistanceCalculator.getDistanceFromLine(latlngList);
+        Log.d(TAG, "latlng size : " + latlngList.size());
+        Log.d(TAG, " 거리 계산한 값 : " + meters);
+
+
+        dailyWalk.setMember_idx(member_idx);
+        dailyWalk.setDistance(meters);
+
+        Log.d(TAG,"데일리워크의 상태 : "+dailyWalk);
 
     }
 
@@ -389,7 +398,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             LatLng latLng=new LatLng(latitude, longitude);
 
 
-            // 1-1) 시작버튼
+            // 1-1) 시작버튼 --> 누르면 마커 자동 생성
             // 위도 경도를 세팅한 GPSData 객체를 저장
             GPSData gpsData=new GPSData();
             if(flag){
@@ -414,8 +423,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
 
 
-
-            /*================================================*/
 
 
         }
