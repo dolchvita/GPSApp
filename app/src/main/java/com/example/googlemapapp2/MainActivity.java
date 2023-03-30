@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // 중지
         bt_stop.setOnClickListener((v) -> {
             Log.d(TAG,"중지 버튼 누름");
-            //flag=!flag;
+            flag=!flag;
 
             try {
                 createArray();
@@ -109,6 +109,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 throw new RuntimeException(e);
             }
         });
+
 
         // 저장  - 위도 경도 보내기
         bt_regist.setOnClickListener((v) ->{
@@ -147,12 +148,93 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // 권한 허용
         checkGrant();
         /*-------------------------------------------------*/
-
     }
+
 
     // 계산된 거리값 저장
     public void regist2() throws JSONException {
+        Log.d(TAG, "등록버튼");
+        // 서버에서 요청 받을 준비
+        BufferedWriter buffw=null;
+        BufferedReader buffr=null;
+        OutputStreamWriter os=null;
+        InputStreamReader is=null;
 
+        try {
+            URL url=new URL("http://www.bodybuddy.kro.kr/main/rest/ranking/walk");
+            URLConnection urlConnection =url.openConnection();
+            HttpURLConnection httpCon=(HttpURLConnection)urlConnection;
+
+            // 세팅
+            httpCon.setRequestMethod("POST");
+            httpCon.setDoOutput(true);
+            httpCon.setRequestProperty("Content-Type", "application/json");
+
+
+            // 5-3) 파라미터 보낼 폼 데이터 만들기   -- 쿼리스트링화!
+            String postData="{\"distance\":\""+dailyWalk.getDistance()+"\",\"member\":{\"member_idx\":\""+member_idx+"\"}}";
+            Log.d(TAG, "보낼 데이터 모습 ddd"+postData);
+
+
+            // 보낼 객체 준비하고 -- 쓰기 write() 하면 끝!
+            os=new OutputStreamWriter(httpCon.getOutputStream());
+            buffw=new BufferedWriter(os);
+
+            buffw.write(postData+"/n");
+            buffw.flush();
+
+
+            //데이터 요청 이후에 입력스트림 만들어야 한다..
+            is = new InputStreamReader(httpCon.getInputStream(), "UTF-8");
+            buffr = new BufferedReader(is);
+
+
+            // 이 과정이 의문스러움..
+            StringBuilder sb=new StringBuilder();
+            while(true){
+                String result=buffr.readLine();
+                sb.append(result);
+                if(result==null){
+                    break;
+                }
+            }
+            Log.d(TAG, "서버로부터 받은 응답 "+sb.toString());
+
+
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if(buffw !=null){
+                try {
+                    buffw.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            if(os !=null){
+                try {
+                    os.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            if(is !=null){
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            if(buffr !=null){
+                try {
+                    buffr.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
 
     }
 
@@ -170,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.d(TAG,"보낼 데이터 가공 전의 모습 : "+toJsonList);
 
        try {
-        URL url=new URL("http://172.30.1.60:7777/rest/myrecord/today/gps");
+        URL url=new URL("http://www.bodybuddy.kro.kr/rest/myrecord/today/gps");
         URLConnection urlConnection =url.openConnection();
         HttpURLConnection httpCon=(HttpURLConnection)urlConnection;
 
@@ -180,9 +262,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         httpCon.setDoOutput(true);
         httpCon.setRequestProperty("Content-Type", "application/json");
 
-
             // 5-3) 파라미터 보낼 폼 데이터 만들기   -- 쿼리스트링화!
-
            Log.d(TAG,"변환된 제이슨!! : "+toJsonList);
 
 
@@ -421,11 +501,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 Log.d(TAG,"넘길 GPS 리스트는~? "+latlngList);
             }
-
-
-
-
         }
+
+
         //얘는 좌표값을 구하는 것이 아닌 다른 어플리케이션이나 서비스가 좌표값을 구하면 단순히 그 값을 받아 오기만 하는
         //전달자 역할 이라는데.. 어디에 쓰이는 건지 모르겠다.
         if(location.getProvider().equals(LocationManager.PASSIVE_PROVIDER)) {

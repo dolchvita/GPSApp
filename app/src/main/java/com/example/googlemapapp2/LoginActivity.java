@@ -71,7 +71,7 @@ public class LoginActivity extends AppCompatActivity {
         InputStreamReader is=null;
 
         try {
-            URL url=new URL("http://172.30.1.60:7777/auth/rest/login/android");
+            URL url=new URL("http://www.bodybuddy.kro.kr/auth/rest/login/android");
             URLConnection urlConnection =url.openConnection();
             HttpURLConnection httpCon=(HttpURLConnection)urlConnection;
 
