@@ -1,2 +1,2 @@
 # GPSApp
-android google Map polyLine with GPS
+GPS 좌표 추출하여 실시간 거리 측정 & 구글맵에 라인 표시
